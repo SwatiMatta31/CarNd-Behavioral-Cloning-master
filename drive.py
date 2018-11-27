@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
 import argparse
 import base64
 from datetime import datetime
 import os
 import shutil
-
+import cv2
 import numpy as np
 import socketio
 import eventlet
@@ -11,6 +17,10 @@ import eventlet.wsgi
 from PIL import Image
 from flask import Flask
 from io import BytesIO
+
+
+# In[2]:
+
 
 from keras.models import load_model
 import h5py
@@ -20,6 +30,9 @@ sio = socketio.Server()
 app = Flask(__name__)
 model = None
 prev_image_array = None
+
+
+# In[6]:
 
 
 class SimplePIController:
@@ -46,6 +59,27 @@ class SimplePIController:
 controller = SimplePIController(0.1, 0.002)
 set_speed = 9
 controller.set_desired(set_speed)
+
+
+# In[8]:
+
+
+def preprocess(img):
+    """
+    Preprocessing (Crop - Resize - Convert to YUV) the input image.
+        Parameters:
+            img: The input image to be preprocessed.
+    """
+    # Cropping the image
+    img = img[60:-25, :, :]
+    # Resizing the image
+    img = cv2.resize(img, (200, 66), cv2.INTER_AREA)
+    # Converting the image to YUV
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    return img
+
+
+# In[4]:
 
 
 @sio.on('telemetry')
@@ -82,6 +116,9 @@ def telemetry(sid, data):
 def connect(sid, environ):
     print("connect ", sid)
     send_control(0, 0)
+
+
+# In[9]:
 
 
 def send_control(steering_angle, throttle):
@@ -137,3 +174,10 @@ if __name__ == '__main__':
 
     # deploy as an eventlet WSGI server
     eventlet.wsgi.server(eventlet.listen(('', 4567)), app)
+
+
+# In[ ]:
+
+
+
+
